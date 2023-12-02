@@ -1,0 +1,81 @@
+ Design a Django application: A public site in which user can pick their favourite 
+programming language and vote.   
+
+Create a New Django Project and App
+# Create a new Django project
+django-admin startproject programming_language_poll
+# Create a new Django app
+cd programming_language_poll
+python manage.py startapp poll
+
+Define a Model for Programming Languages
+Open the models.py file inside your app directory (poll/models.py) and define a model to represent programming languages and their vote counts:
+from django.db import models
+class ProgrammingLanguage(models.Model):
+    name = models.CharField(max_length=100)
+    votes = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+Create Migrations
+Generate migrations for your model using the following commands:
+python manage.py makemigrations poll
+python manage.py migrate
+This will create the necessary database tables based on your model.
+
+Create Views and Templates
+In your app directory, create views for displaying the list of programming languages and handling the voting process in views.py (poll/views.py):
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import ProgrammingLanguage
+
+def index(request):
+    languages = ProgrammingLanguage.objects.all()
+    return render(request, 'poll/index.html', {'languages': languages})
+
+def vote(request, language_id):
+    language = get_object_or_404(ProgrammingLanguage, pk=language_id)
+    language.votes += 1
+    language.save()
+    return redirect('poll:index')
+Create HTML templates for displaying the list of languages and voting buttons in your app's template directory (poll/templates/poll/). Here's a basic template for index.html:
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favorite Programming Language Poll</title>
+</head>
+<body>
+    <h1>Vote for Your Favorite Programming Language</h1>
+    <ul>
+        {% for language in languages %}
+            <li>{{ language.name }} - Votes: {{ language.votes }} <a href="{% url 'poll:vote' language.id %}">Vote</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+
+Create URL Mappings
+Define URL patterns for your views in urls.py (poll/urls.py):
+from django.urls import path
+from . import views
+
+app_name = 'poll'
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('<int:language_id>/vote/', views.vote, name='vote'),
+]
+
+Configure Project URL Routing
+In your project's urls.py file (programming_language_poll/urls.py), include the URL patterns from your app:
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('poll/', include('poll.urls')),
+]
+
+Run the Development Server
+python manage.py runserver
+
+Access the Site:  http://127.0.0.1:8000/poll/ 
